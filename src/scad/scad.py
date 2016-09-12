@@ -713,6 +713,10 @@ class Scene(Block):
         self._special_vars = special_vars
         self._indent = ' ' * 4
 
+    def __call__(self, *objects):
+        for obj in objects:
+            self.append(obj)
+
     def __enter__(self, indent=' ' * 4):
         self._indent = indent
         return self

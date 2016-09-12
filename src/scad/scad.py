@@ -550,6 +550,10 @@ class Square(RectGeometry):
         return Polygon(res)
 
 
+def square(size, **kwargs):
+    return Square(size, **kwargs)
+
+
 class Cube(RectGeometry):
     def __init__(self, size, center=None):
         super().__init__(dimensions=3, name='cube', size=size, center=center)
@@ -575,6 +579,8 @@ class Circle(RoundGeometry):
         super().__init__(dimensions=2, name='circle', r=r, d=d, **special_vars)
 
 
+def circle(**kwargs):
+    return Circle(**kwargs)
 
 
 class CylinderParams(namedtuple('CylinderParams', 'h r d r1 r2 d1 d2 center')):
@@ -590,6 +596,10 @@ class Cylinder(Geometry, _OneLinerObjectMixin):
         params = CylinderParams(h, r, d, r1, r2, d1, d2, center)
         super().__init__(dimensions=3, name='cylinder', data=params,
                          **special_vars)
+
+
+def cylinder(h, **kwargs):
+    return Cylinder(h, **kwargs)
 
 
 ImportParams = namedtuple('ImportParams', 'file convexity')

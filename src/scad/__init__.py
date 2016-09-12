@@ -15,5 +15,6 @@ from .scad import \
     CylinderParams, Cylinder, \
     Scene, Module, Variable, Import, \
     dump, module, \
-    cos, sin
+    cos, sin, \
+    cylinder, square, circle
 

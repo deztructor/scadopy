@@ -507,7 +507,7 @@ class Geometry(Item, _CSGMixin):
 
     def __str__(self):
         params = format_call_params(self._data, **self._special_vars)
-        return '{}({});'.format(self._name, params)
+        return '{}({})'.format(self._name, params)
 
 
 PolygonData = namedtuple('PolygonData', 'points paths convexity')

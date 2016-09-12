@@ -347,30 +347,31 @@ class Size:
         return self + other
 
 class Transform(Item, _TransformFormatMixin, _CSGMixin):
-    def __init__(self, name, target, data):
+    def __init__(self, name, target, data, **special_vars):
         self._name = name
         self._target = target
         self._data = data
+        self._special_vars = special_vars
 
     @property
     def dimensions(self):
         return self._target.dimensions
 
     def __str__(self):
-        return '{}({})'.format(
-            self._name,
-            format_call_params(self._data) if self._data else ''
-        )
+        params = format_call_params(self._data or {}, **self._special_vars)
+        return '{}({})'.format(self._name, params)
 
 
 class _TransformNode:
-    def __init__(self, transform_cls, data=None):
+    def __init__(self, transform_cls, data=None, **special_vars):
         self._cls = transform_cls
         self._data = data
+        self._special_vars = special_vars
 
     def __rmul__(self, target):
-        return self._cls(target, self._data) if self._data \
-            else self._cls(target)
+        return self._cls(target, self._data, **self._special_vars) \
+            if self._data \
+            else self._cls(target, **self._special_vars)
 
 
 RotateData = namedtuple('RotateData', 'a v')
@@ -379,7 +380,9 @@ class _Rotate(Transform):
     def __init__(self, target, data):
         super().__init__('rotate', target, data)
 
-def rotate(angle, vector=None):
+def rotate(angle=None, vector=None, ax=0, ay=0, az=0):
+    if angle is None:
+        angle=Vector(ax, ay, az)
     return _TransformNode(_Rotate, RotateData(angle, vector))
 
 
@@ -389,7 +392,9 @@ class _Translate(Transform):
     def __init__(self, target, data):
         super().__init__('translate', target, data)
 
-def translate(vector=None, x=None, y=None, z=None):
+def translate(vector=None, x=0, y=0, z=0):
+    if vector is None:
+        vector=Vector(x, y, z)
     return _TransformNode(_Translate, VectorParam(vector))
 
 
@@ -422,14 +427,14 @@ def resize(newsize, auto=None):
     return _TransformNode(_Resize, ResizeParams(newsize, auto))
 
 class LimitedDimTransform(Transform):
-    def __init__(self, dimensions, name, target, data=None):
+    def __init__(self, dimensions, name, target, data=None, **special_vars):
         if target.dimensions not in dimensions:
             raise ValueError("Can transform only object with {} dims".format(dimensions))
-        super().__init__(name, target, data)
+        super().__init__(name, target, data, **special_vars)
 
 class _Extrude(LimitedDimTransform):
-    def __init__(self, name, target, data=None):
-        super().__init__((2,), name, target, data)
+    def __init__(self, name, target, data=None, **special_vars):
+        super().__init__((2,), name, target, data, **special_vars)
 
     @property
     def dimensions(self):
@@ -454,12 +459,12 @@ def linear_extrude(height=None, center=None, convexity=None,
 
 
 class _RotateExtrude(_Extrude):
-    def __init__(self, target):
-        super().__init__('rotate_extrude', target)
+    def __init__(self, target, **special_vars):
+        super().__init__('rotate_extrude', target, **special_vars)
 
 
-def rotate_extrude():
-    return _TransformNode(_RotateExtrude)
+def rotate_extrude(**special_vars):
+    return _TransformNode(_RotateExtrude, **special_vars)
 
 class OffsetParams(namedtuple('OffsetParams', 'r delta chamfer')):
     def __new__(cls, r=None, delta=None, chamfer=None):
@@ -719,6 +724,7 @@ class Scene(Block):
     def __call__(self, *objects):
         for obj in objects:
             self.append(obj)
+        return self
 
     def __enter__(self, indent=' ' * 4):
         self._indent = indent

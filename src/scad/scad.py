@@ -561,8 +561,8 @@ class CircleData(namedtuple('CircleData', 'r d')):
         return super().__new__(cls, r, d)
 
 class RoundGeometry(Geometry, _OneLinerObjectMixin):
-    def __init__(self, dimensions, name, r, d):
-        super().__init__(dimensions, name, CircleData(r, d))
+    def __init__(self, dimensions, name, r, d, **special_vars):
+        super().__init__(dimensions, name, CircleData(r, d), **special_vars)
 
 
 class Sphere(RoundGeometry):
@@ -571,8 +571,10 @@ class Sphere(RoundGeometry):
 
 
 class Circle(RoundGeometry):
-    def __init__(self, r=None, d=None):
-        super().__init__(dimensions=2, name='circle', r=r, d=d)
+    def __init__(self, r=None, d=None, **special_vars):
+        super().__init__(dimensions=2, name='circle', r=r, d=d, **special_vars)
+
+
 
 
 class CylinderParams(namedtuple('CylinderParams', 'h r d r1 r2 d1 d2 center')):

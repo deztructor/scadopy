@@ -16,5 +16,6 @@ from .scad import \
     Scene, Module, Variable, Import, \
     dump, module, \
     cos, sin, \
+    minkowsi, \
     cylinder, square, circle
 

@@ -479,12 +479,15 @@ class _Offset(LimitedDimTransform):
 def offset(r=None, delta=None, chamfer=None):
     return _TransformNode(_Offset, OffsetParams(r, delta, chamfer))
 
-class _Minkowski(Transform):
-    def __init__(self, target):
-        super().__init__('minkowsi', target, None)
+class _Minkowski(Objects, _CSGMixin):
 
-def minkowsi():
-    return _TransformNode(_Minkowski)
+    def __init__(self, *objects):
+        return super().__init__('minkowski', objects)
+
+
+def minkowsi(*objects):
+    return _Minkowski(*objects)
+
 
 class Geometry(Item, _CSGMixin):
     def __init__(self, dimensions, name, data, **special_vars):

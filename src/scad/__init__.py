@@ -19,3 +19,6 @@ from .scad import \
     minkowsi, \
     cylinder, square, circle
 
+from . import geom
+
+

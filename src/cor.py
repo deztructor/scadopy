@@ -1,3 +1,6 @@
+import math
+
+
 def is_sparse(values, pred):
     expect = True
     flip_count = 0
@@ -27,6 +30,8 @@ def compose(*fns):
     return fn
 
 
+def is_around(v, pivot, dev=0.000001):
+    return math.fabs(v) - pivot < dev
 
 
 class Attrs(object):

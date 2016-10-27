@@ -27,75 +27,40 @@ def compose(*fns):
     return fn
 
 
-class Member:
-    def __init__(self, value=None, name=None, optional=False):
-        self._name = name or type(self).__name__
-        self._unique_name = '_{}#{}'.format(self.name, id(self))
-        self.value = value
-        self.optional = optional
-
-    @property
-    def name(self):
-        return self._name
-
-    def __str__(self):
-        return (self.name or '<unknown>') + '=' + (str(self.value) or '<?>')
-
-    def __get__(self, instance, owner):
-        attr = self if instance is None \
-               else getattr(instance, self._unique_name, self)
-        return attr.value
-
-    def __set__(self, instance, value):
-        setattr(instance, self._unique_name, Member(value, self.name))
 
 
-class StructureFactory(type):
-    def __new__(cls, name, bases, attrs):
-        return super().__new__(cls, name, bases, attrs)
+class Attrs(object):
+    def __init__(self, *args, **kwargs):
+        self._attrs = {}
+        self._attrs.update({k: v for k, v in args})
+        self._attrs.update(kwargs)
 
-    def __init__(cls, name, bases, attrs):
-        super().__init__(name, bases, attrs)
-        for k, v in attrs.items():
-            if isinstance(v, Member):
-                v._name = k
-                v._unique_name = '_{}#{}'.format(cls.__name__, id(v))
-                cls._structure_members.add(v.name)
-                if v.optional:
-                    cls._optional_members.add(v.name)
+    def __getattr__(self, name):
+        if name == '_attrs' or name.startswith('__'):
+            return object.__getattr__(self, name)
 
-class Structure(metaclass=StructureFactory):
+        try:
+            return self._attrs[name]
+        except KeyError as err:
+            raise AttributeError(err.args) from err
 
-    @property
-    def member_names(self):
-        return self._structure_members
-
-    @property
-    def optional_members(self):
-        return self._optional_members
+    def __setattr__(self, name, value):
+        if name == '_attrs' or name.startswith('__'):
+            object.__setattr__(self, name, value)
+        else:
+            self._attrs[name] = value
 
     def as_dict(self):
-        return {name: getattr(self, name)
-                for name in self._structure_members}
+        return self._attrs
 
-    _structure_members = set()
-    _optional_members = set()
+    def get_names(self):
+        return self._attrs.keys()
 
-    def __init__(self, **kwargs):
-        cls_dict = self.__class__.__dict__
-        cls_keys = {name
-                    for name, value in cls_dict.items()
-                    if isinstance(value, Member)}
-        param_keys = set(kwargs.keys())
-        if cls_keys != param_keys:
-            extra_keys = param_keys - cls_keys
-            missing_keys = cls_keys - param_keys - self.optional_members
-            if extra_keys or missing_keys:
-                err = {
-                    'extra': extra_keys,
-                    'missing': missing_keys,
-                }
-                raise ValueError(err)
+    def as_args(self, names):
+        return [self._attrs[k] for k in names]
 
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+    @classmethod
+    def from_map(cls, names, src):
+        return cls(*((k, src.get(k)) for k in names))
+
+

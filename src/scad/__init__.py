@@ -20,5 +20,6 @@ from .scad import \
     cylinder, square, circle
 
 from . import geom
+from . import util
 
 

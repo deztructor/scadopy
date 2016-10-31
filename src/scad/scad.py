@@ -403,7 +403,9 @@ class _Scale(Transform):
         super().__init__('scale', target, data)
 
 
-def scale(vector):
+def scale(vector, x=0, y=0, z=0):
+    if vector is None:
+        vector=Vector(x, y, z)
     return _TransformNode(_Scale, VectorParam(vector))
 
 
@@ -412,7 +414,9 @@ class _Mirror(Transform):
         super().__init__('mirror', target, data)
 
 
-def mirror(vector):
+def mirror(vector=None, x=0, y=0, z=0):
+    if vector is None:
+        vector=Vector(x, y, z)
     return _TransformNode(_Mirror, VectorParam(vector))
 
 
@@ -423,8 +427,10 @@ class _Resize(Transform):
         super().__init__('resize', target, data)
 
 
-def resize(newsize, auto=None):
-    return _TransformNode(_Resize, ResizeParams(newsize, auto))
+def resize(new_size, auto=None, x=0, y=0, z=0):
+    if new_size is None:
+        new_size=Vector(x, y, z)
+    return _TransformNode(_Resize, ResizeParams(new_size, auto))
 
 class LimitedDimTransform(Transform):
     def __init__(self, dimensions, name, target, data=None, **special_vars):

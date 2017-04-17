@@ -222,7 +222,7 @@ class Vector(namedtuple('Vector', 'x y z')):
     def __add__(self, other):
         def add(a, b):
             if a is None:
-                res = None
+                res = b
             elif b is None:
                 res = a
             else:
@@ -239,7 +239,6 @@ class Vector(namedtuple('Vector', 'x y z')):
 
     def __neg__(self):
         return Vector(*map(lambda x: None if x is None else -x, self))
-
 
     def _zip(self, other):
         if isinstance(other, Iterable):

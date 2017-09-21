@@ -256,7 +256,9 @@ class Vector(namedtuple('Vector', 'x y z')):
 
     def __mul__(self, other):
         pairs = self._zip(other)
-        return Vector(*(a * b for a, b in pairs))
+        def mul(x, y):
+            return (x * y if not (x is None or y is None) else None)
+        return Vector(*(mul(a, b) for a, b in pairs))
 
     @property
     def coord(self):

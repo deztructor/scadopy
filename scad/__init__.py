@@ -18,9 +18,9 @@ from .scad import (
     cos, sin,
     minkowski,
     cylinder, square, circle,
+    color, cube, placeholder,
 )
 
 from . import geom
 from . import util
-
 

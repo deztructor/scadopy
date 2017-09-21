@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from collections import namedtuple, Iterable
+from collections import namedtuple, Iterable, Sequence
 from enum import Enum
 import functools
 import itertools
@@ -393,6 +393,7 @@ class _Translate(Transform):
     def __init__(self, target, data):
         super().__init__('translate', target, data)
 
+
 def translate(vector=None, x=0, y=0, z=0):
     if vector is None:
         vector=Vector(x, y, z)
@@ -404,7 +405,7 @@ class _Scale(Transform):
         super().__init__('scale', target, data)
 
 
-def scale(vector, x=0, y=0, z=0):
+def scale(vector, x=1, y=1, z=1):
     if vector is None:
         vector=Vector(x, y, z)
     return _TransformNode(_Scale, VectorParam(vector))
@@ -432,6 +433,20 @@ def resize(new_size, auto=None, x=0, y=0, z=0):
     if new_size is None:
         new_size=Vector(x, y, z)
     return _TransformNode(_Resize, ResizeParams(new_size, auto))
+
+
+ColorParam = namedtuple('ColorParam', 'c alpha')
+
+class _Color(Transform):
+    def __init__(self, target, data):
+        super().__init__('color', target, data)
+
+
+def color(rgba, r=0, g=0, b=0, a=1):
+    if rgba is None:
+        rgba=Vector(r, g, b)
+    return _TransformNode(_Color, ColorParam(rgba, a))
+
 
 class LimitedDimTransform(Transform):
     def __init__(self, dimensions, name, target, data=None, **special_vars):
@@ -565,13 +580,55 @@ class Square(RectGeometry):
         return Polygon(res)
 
 
-def square(size, **kwargs):
-    return Square(size, **kwargs)
+def square(size=None, center=None, x=0, y=0):
+    if size is None:
+        size = Vector(x, y)
+    if center is None:
+        return Square(size)
+
+    if isinstance(center, Sequence):
+        center = Vector(*center)
+
+    if not isinstance(center, Vector):
+        raise Exception("Need center (bool, Vector)")
+
+    if center.x and center.y:
+        return Square(size, True)
+
+    return Square(size) * translate(
+        x = -size.x / 2 if center.x else 0,
+        y = -size.y / 2 if center.y else 0,
+    )
 
 
 class Cube(RectGeometry):
     def __init__(self, size, center=None):
         super().__init__(dimensions=3, name='cube', size=size, center=center)
+
+
+def cube(size=None, center=None, x=0, y=0, z=0):
+    if size is None:
+        size = Vector(x, y, z)
+    if center is None:
+        return Cube(size)
+
+    if isinstance(center, Sequence):
+        center = Vector(*center)
+
+    if not isinstance(center, Vector):
+        raise Exception("Need center (bool, Vector)")
+
+    if center.x and center.y and center.z:
+        return Cube(size, True)
+
+    return Cube(size) * translate(
+        x = -size.x / 2 if center.x else 0,
+        y = -size.y / 2 if center.y else 0,
+        z = -size.z / 2 if center.z else 0,
+    )
+
+def placeholder(dimensions):
+    return cube() if dimensions == 3 else square()
 
 
 class CircleData(namedtuple('CircleData', 'r d')):

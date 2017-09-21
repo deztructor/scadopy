@@ -23,4 +23,5 @@ from .scad import (
 
 from . import geom
 from . import util
+from . import p3d
 

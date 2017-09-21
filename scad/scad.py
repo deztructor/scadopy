@@ -497,7 +497,7 @@ class _Minkowski(Objects, _CSGMixin):
         return super().__init__('minkowski', objects)
 
 
-def minkowsi(*objects):
+def minkowski(*objects):
     return _Minkowski(*objects)
 
 

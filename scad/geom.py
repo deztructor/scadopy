@@ -86,6 +86,36 @@ class RightTriangle(RightTriangleFields):
         return sides >= 2 or (angles > 0 and sides > 0)
 
 
+class Round(collections.namedtuple('Round', 'r d')):
+    def __new__(cls, r=None, d=None):
+        if r is None:
+            if d is None:
+                raise Exception('r or d?')
+            r = d / 2
+        elif d is None:
+            d = r * 2
+        else:
+            raise Exception('r _or_ d')
+
+        return super().__new__(cls, r, d)
+
+    def __add__(self, v):
+        if not isinstance(v, Round):
+            raise Exception('Needs Round')
+        return Round(d=self.d + v.d)
+
+    def __sub__(self, v):
+        if not isinstance(v, Round):
+            raise Exception('Needs Round')
+        return Round(d=self.d - v.d)
+
+    def __truediv__(self, v):
+        return Round(d=self.d / 2)
+
+    def __mul__(self, v):
+        return Round(d=self.d * 2)
+
+
 class Sector:
     params = {'alpha', 'beta', 'r', 'chord', 'dcenter', 'dedge'}
     angles = ('alpha', 'beta')

@@ -10,6 +10,10 @@ import inspect
 import math
 
 
+class Error(Exception):
+    pass
+
+
 class _Bool(namedtuple('Bool', 'value')):
     def __str__(self):
         return 'true' if self.value else 'false'
@@ -590,10 +594,13 @@ def square(size=None, center=None, x=0, y=0):
         center = Vector(*center)
 
     if not isinstance(center, Vector):
-        raise Exception("Need center (bool, Vector)")
+        raise Error("Need center (bool, Vector)")
 
     if center.x and center.y:
         return Square(size, True)
+
+    if not isinstance(size, Vector):
+        size = Vector(*size)
 
     return Square(size) * translate(
         x = -size.x / 2 if center.x else 0,
@@ -616,7 +623,7 @@ def cube(size=None, center=None, x=0, y=0, z=0):
         center = Vector(*center)
 
     if not isinstance(center, Vector):
-        raise Exception("Need center (bool, Vector)")
+        raise Error("Need center (bool, Vector)")
 
     if center.x and center.y and center.z:
         return Cube(size, True)

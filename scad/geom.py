@@ -1,5 +1,5 @@
 import collections
-from functools import partial
+import functools
 import math
 
 from cor import is_around, Attrs
@@ -175,3 +175,15 @@ class Sector:
     @property
     def dcenter(self):
         return self._t.b
+
+
+Slice = collections.namedtuple('Slice', 'alpha delta')
+
+
+def gen_slices(alpha, delta=90):
+    beta = alpha
+    while beta >= delta:
+        yield Slice(alpha - beta, delta)
+        beta -= delta
+    if beta > 0:
+        yield Slice(alpha - beta, beta)

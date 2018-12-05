@@ -53,7 +53,8 @@ def set_debug(v):
 
 def _rect_slice(alpha, delta, get_rect):
     return (
-        get_rect() - get_rect() * scad.rotate(az=delta) if delta < 90
+        get_rect() - (get_rect() * scad.scale(x=2) * scad.rotate(az=delta))
+        if delta < 90
         else get_rect()
     ) * scad.rotate(az=alpha)
 
@@ -73,7 +74,7 @@ def cylinder_cut(alpha, r, h):
     return scad.Union(*(
             _rect_slice(*slices, lambda: scad.Cube([r, r, h]))
             for slices in geom.gen_slices(alpha)
-    ))
+    )) * scad.rotate((360 - alpha) / 2)
 
 
 class CountersinkHole(collections.namedtuple('CountersinkBolt', 'r_out h_head r_in h' )):

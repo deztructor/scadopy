@@ -140,10 +140,21 @@ class Round(collections.namedtuple('Round', 'r d')):
         return Round(d=self.d - v.d)
 
     def __truediv__(self, v):
-        return Round(d=self.d / 2)
+        return self.d / v.d if isinstance(v, Round) else Round(d=self.d / v)
 
     def __mul__(self, v):
-        return Round(d=self.d * 2)
+        return Round(d=self.d * v)
+
+    def __rmul__(self, v):
+        return self * v
+
+    @property
+    def area(self):
+        return math.pi * self.r**2
+
+    @property
+    def circumference(self):
+        return math.pi * self.d
 
 
 class Sector:

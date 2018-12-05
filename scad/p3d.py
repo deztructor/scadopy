@@ -9,14 +9,18 @@ class Material(enum.Enum):
     PC = 'polycarbonate'
     Nylon = 'nylon'
 
+Filament = collections.namedtuple('Filament', 'perim w')
 
-class Printer(collections.namedtuple('Printer', 'layer material nozzle perimeter')):
+class Printer(collections.namedtuple('Printer', 'layer material nozzle filament')):
 
-    def __new__(cls, layer_h, material: Material, nozzle_d=0.4):
+    def __new__(cls, layer_h: float, material: Material, nozzle_d: float = 0.4, filament: Filament = None):
         if layer_h > nozzle_d * 0.75:
             raise Exception("Nozzle is too small for the layer height {}".format(layer_h))
 
-        return super().__new__(cls, layer_h, material, nozzle_d, nozzle_d * 0.75)
+        if filament is None:
+            filament = Filament(nozzle_d * 1.125, nozzle_d)
+
+        return super().__new__(cls, layer_h, material, nozzle_d, filament)
 
     def hole_size(self, size, is_xy):
         return (

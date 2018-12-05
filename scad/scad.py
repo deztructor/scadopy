@@ -4,11 +4,11 @@ from collections import namedtuple, Iterable, Sequence
 from enum import Enum
 import functools
 import itertools
-import numbers
 import cor
 import inspect
 import math
 
+from .geom import Vector, Size, Variable
 
 class Error(Exception):
     pass
@@ -201,156 +201,6 @@ class Intersection(Objects, _CSGMixin):
         return Intersection(*objs)
 
 
-class Vector(namedtuple('Vector', 'x y z')):
-    def __new__(cls, x=None, y=None, z=None):
-        return super().__new__(cls, x, y, z)
-
-    @property
-    def dimensions(self):
-        return sum((1 for v in self if v is not None))
-
-    @property
-    def xy(self):
-        return Vector(self.x, self.y)
-
-    @property
-    def is_sparse(self):
-        return cor.is_sparse(self, lambda x: x is not None)
-
-    def __repr__(self):
-        placeholder = '' if self.is_sparse else None
-        values = map(lambda x: placeholder if x is None else str(x), self)
-        params = ', '.join(v for v in values if v is not None)
-        return '[{}]'.format(params)
-
-    def __add__(self, other):
-        def add(a, b):
-            if a is None:
-                res = b
-            elif b is None:
-                res = a
-            else:
-                res = a + b
-            return res
-
-        pairs = self._zip(other)
-        return Vector(*(add(a, b) for a, b in pairs))
-
-    def __sub__(self, other):
-        if not isinstance(other, Vector):
-            other = Vector(*other)
-        return self + (-other)
-
-    def __neg__(self):
-        return Vector(*map(lambda x: None if x is None else -x, self))
-
-    def _zip(self, other):
-        if isinstance(other, Iterable):
-            return zip(self, other)
-        elif isinstance(other, numbers.Number):
-            return zip(self, itertools.repeat(other))
-        elif isinstance(other, Size):
-            return zip(self, other.get_vector(self.dimensions))
-        else:
-            raise ValueError("Can't zip with {}".format(other))
-
-    def __truediv__(self, other):
-        pairs = self._zip(other)
-        return Vector(*(a / b for a, b in pairs))
-
-    def __mul__(self, other):
-        pairs = self._zip(other)
-        def mul(x, y):
-            return (x * y if not (x is None or y is None) else None)
-        return Vector(*(mul(a, b) for a, b in pairs))
-
-    @property
-    def coord(self):
-        if self.is_sparse:
-            raise RuntimeError("Sparse vector can't be resolved")
-        return self[:self.dimensions]
-
-    def updated(self, x=None, y=None, z=None):
-        return Vector(
-            self.x if x is None else x,
-            self.y if y is None else y,
-            self.z if z is None else z
-        )
-
-
-class Size:
-
-    def __init__(self, value):
-        if isinstance(value, Size):
-            value = value.value
-        elif not hasattr(value, 'scad_param'):
-            value = self._validated_coords(value)
-        self.value = value
-
-    def __str__(self):
-        if isinstance(self.value, Iterable):
-            return str(list(self.value))
-        else:
-            return str(self.value)
-
-    @property
-    def dimensions(self):
-        v = self.value
-        if isinstance(v, numbers.Number):
-            res = 1
-        elif isinstance(v, Vector):
-            res = v.dimensions
-        else:
-            res = len(v)
-        return res
-
-    def get_vector(self, dimensions):
-        v = self.value
-        if isinstance(v, list):
-            if dimensions != len(v):
-                msg = "Requested {} dims, has {}"
-                raise ValueError(msg.format(dimensions, len(v)))
-            else:
-                return v
-        else:
-            return Vector(itertools.repeat(v, dimensions))
-
-    @classmethod
-    def _validated_coord(cls, value):
-        if not isinstance(value, numbers.Number):
-            raise ValueError('Not a number {}'.format(value))
-        return value
-
-    @classmethod
-    def _validated_coords(cls, value):
-        if isinstance(value, Variable):
-            res = value
-        if not isinstance(value, Iterable):
-            res = cls._validated_coord(value)
-        elif isinstance(value, Vector):
-            res = value.coord
-        elif isinstance(value, str):
-                raise ValueError('Number or number seq is expected, got {}'.format(value))
-        else:
-            res = [cls._validated_coord(v) for v in value]
-
-        return res
-
-    def __add__(self, other):
-        if not isinstance(other, Size):
-            other = Size(other)
-
-        dims = (self.dimensions, other.dimensions)
-        if dims == (1, 1):
-            return Size(self.value + other.value)
-
-        max_dim = max(*dims)
-        vectors = (x.get_vector(max_dim) for x in (self, other))
-        return Size([sum(v) for v in zip(*vectors)])
-
-    def __radd__(self, other):
-        return self + other
-
 class Transform(Item, _TransformFormatMixin, _CSGMixin):
     def __init__(self, name, target, data, **special_vars):
         self._name = name
@@ -409,7 +259,7 @@ class _Scale(Transform):
         super().__init__('scale', target, data)
 
 
-def scale(vector, x=1, y=1, z=1):
+def scale(vector=None, x=1, y=1, z=1):
     if vector is None:
         vector=Vector(x, y, z)
     return _TransformNode(_Scale, VectorParam(vector))
@@ -433,7 +283,7 @@ class _Resize(Transform):
         super().__init__('resize', target, data)
 
 
-def resize(new_size, auto=None, x=0, y=0, z=0):
+def resize(new_size=None, auto=None, x=0, y=0, z=0):
     if new_size is None:
         new_size=Vector(x, y, z)
     return _TransformNode(_Resize, ResizeParams(new_size, auto))
@@ -824,31 +674,6 @@ class VarRef(StatementMixin):
 
     def __str__(self):
         return self._var.name
-
-
-class Variable:
-    _counter = 0
-
-    def __init__(self, value=None, name=None):
-        type(self)._counter += 1
-        self.name = name or type(self).__name__
-        self.unique_name = '_{}#{}'.format(self.name, self._counter)
-        self.value = value
-
-    def __str__(self):
-        return (self.name or '<unknown>') + '=' + (str(self.value) or '<?>')
-
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        return VarRef(self)
-
-    def __set__(self, instance, value):
-        setattr(instance, self.unique_name, Variable(value, self.name))
-
-    @property
-    def scad_param(self, instance):
-        return self
 
 
 class ScopeFactory(type):

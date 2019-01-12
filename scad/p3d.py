@@ -1,6 +1,21 @@
 import enum
 import collections
 
+from cor.adt.record import(
+    ExtensibleRecord,
+    Record,
+)
+from cor.adt.operation import (
+    convert,
+    expect_type,
+    provide_missing,
+    skip_missing,
+)
+from cor.adt.hook import (
+    field_invariant,
+    field_aggregate,
+)
+from scad import geom
 
 class Material(enum.Enum):
     PLA = 'pla'
@@ -9,18 +24,30 @@ class Material(enum.Enum):
     PC = 'polycarbonate'
     Nylon = 'nylon'
 
-Filament = collections.namedtuple('Filament', 'perim w')
 
-class Printer(collections.namedtuple('Printer', 'layer material nozzle filament')):
+class Wall(Record):
+    perim = convert(float)
+    w = convert(float)
 
-    def __new__(cls, layer_h: float, material: Material, nozzle_d: float = 0.4, filament: Filament = None):
-        if layer_h > nozzle_d * 0.75:
-            raise Exception("Nozzle is too small for the layer height {}".format(layer_h))
 
-        if filament is None:
-            filament = Filament(nozzle_d * 1.125, nozzle_d)
+def _check_layer(printer, _, layer):
+    if layer > printer.nozzle * 0.75:
+        raise Exception("Nozzle is too small for the layer height {}".format(layer))
 
-        return super().__new__(cls, layer_h, material, nozzle_d, filament)
+
+def _provide_missing_wall(printer, field_name, value):
+    if value:
+        return None
+    nozzle = printer.nozzle
+    return field_name, Wall(perim=nozzle * 1.125, w=nozzle)
+
+
+class Printer(Record):
+    layer = convert(float) << field_invariant(_check_layer)
+    material = provide_missing(Material.PLA) >> expect_type(Material)
+    nozzle = provide_missing(0.4) >> convert(float)
+    wall = skip_missing >> expect_type(Wall) << field_aggregate(_provide_missing_wall)
+    plate = provide_missing(geom.Vector(x=250, y=210)) >> convert(geom.Vector)
 
     def hole_size(self, size, is_xy):
         return (

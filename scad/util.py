@@ -40,7 +40,7 @@ class _D:
     def __rmul__(self, v):
         return (
             v * scad.color(self._color, a=0.5) if self.DEBUG
-            else scad.placeholder((v * color(self._color, a=0.5)).dimensions)
+            else scad.placeholder((v * scad.color(self._color, a=0.5)).dimensions)
         )
 
 def debug(clr=None):

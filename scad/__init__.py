@@ -19,6 +19,7 @@ from .scad import (
     minkowski,
     cylinder, square, circle,
     color, cube, placeholder,
+    polygon,
 )
 
 from . import geom

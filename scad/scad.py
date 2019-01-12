@@ -393,6 +393,10 @@ class Polygon(Geometry, _OneLinerObjectMixin):
         super().__init__(2, 'polygon', PolygonData(points, paths, convexity))
 
 
+def polygon(*points, paths=None, convexity=None):
+    return Polygon(points, paths, convexity)
+
+
 PolyhedronData = namedtuple('PolyhedronData', 'points triangles convexity')
 
 class Polyhedron(Geometry, _OneLinerObjectMixin):

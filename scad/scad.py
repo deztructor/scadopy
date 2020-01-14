@@ -521,7 +521,7 @@ def circle(**kwargs):
 
 class CylinderParams(namedtuple('CylinderParams', 'h r d r1 r2 d1 d2 center')):
     def __new__(cls, h, r, d, r1, r2, d1, d2, center):
-        for args in ((r, r1, r2), (d, d1), (d, d2), (r, d), (r1, d1), (r2, d2)):
+        for args in ((r, r1), (r, r2), (d, d1), (d, d2), (r, d), (r1, d1), (r2, d2)):
             assert_conflicting_args(*args)
         return super().__new__(cls, h, r, d, r1, r2, d1, d2, center)
 

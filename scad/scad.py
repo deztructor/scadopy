@@ -506,8 +506,8 @@ class RoundGeometry(Geometry, _OneLinerObjectMixin):
 
 
 class Sphere(RoundGeometry):
-    def __init__(self, r=None, d=None):
-        super().__init__(dimensions=3, name='sphere', r=r, d=d)
+    def __init__(self, r=None, d=None, **special_vars):
+        super().__init__(dimensions=3, name='sphere', r=r, d=d, **special_vars)
 
 
 class Circle(RoundGeometry):

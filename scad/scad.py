@@ -441,20 +441,20 @@ class Square(RectGeometry):
 def square(size=None, center=None, x=0, y=0):
     if size is None:
         size = Vector(x, y)
+    elif not isinstance(size, Vector):
+        size = Vector(*size)
+
     if center is None:
         return Square(size)
 
-    if isinstance(center, Sequence):
-        center = Vector(*center)
+    if isinstance(center, bool):
+        return Square(size, center=center)
 
     if not isinstance(center, Vector):
-        raise Error("Need center (bool, Vector)")
+        center = Vector(*center)
 
     if center.x and center.y:
         return Square(size, True)
-
-    if not isinstance(size, Vector):
-        size = Vector(*size)
 
     return Square(size) * translate(
         x = -size.x / 2 if center.x else 0,
@@ -470,17 +470,17 @@ class Cube(RectGeometry):
 def cube(size=None, center=None, x=0, y=0, z=0):
     if size is None:
         size = Vector(x, y, z)
+    elif not isinstance(size, Vector):
+        size = Vector(*size)
+
     if center is None:
         return Cube(size)
-
-    if isinstance(center, Sequence):
-        center = Vector(*center)
 
     if isinstance(center, bool):
         return Cube(size, center=center)
 
     if not isinstance(center, Vector):
-        raise Error("Need center (bool, Vector)")
+        center = Vector(*center)
 
     if center.x and center.y and center.z:
         return Cube(size, True)

@@ -1,6 +1,7 @@
 import collections
 from collections import namedtuple, Iterable, Sequence
 import functools
+import itertools
 import math
 import numbers
 
